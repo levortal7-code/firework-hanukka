@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>זיקוקי חנוכה</title>
+<style>
+:root {
+  --sky1:#91b8d5;
+  --sky2:#aec9df;
+  --sky3:#c4d9e8;
+  --gold:#e8bd66;
+  --ink:#34516c;
+}
+* { box-sizing:border-box; }
+html,body {
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  overscroll-behavior:none;
+  touch-action:manipulation;
+  font-family:Arial,"Rubik",sans-serif;
+  color:var(--ink);
+}
+body {
+  background:linear-gradient(155deg,var(--sky1),var(--sky2) 52%,var(--sky3));
+  position:relative;
+}
+#stage {
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+  touch-action:manipulation;
+}
+#art {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+#intro {
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:clamp(24px,5vmin,45px);
+  z-index:5;
+  transition:opacity .6s ease;
+}
+h1 {
+  font-size:clamp(38px,9vmin,76px);
+  font-weight:700;
+  margin:0;
+  color:#345773;
+  text-shadow:0 2px 5px #ffffff55;
+  text-align:center;
+}
+#start {
+  border:2px solid #f9e5b7;
+  background:#f1d18c;
+  color:#5b4a32;
+  border-radius:30px;
+  padding:18px 65px;
+  min-width:190px;
+  min-height:76px;
+  font-size:clamp(26px,5vmin,40px);
+  font-weight:bold;
+  box-shadow:0 5px 15px #526d8730;
+  cursor:pointer;
+}
+#start:active { transform:scale(.97); }
+#settingsButton {
+  position:absolute;
+  z-index:20;
+  top:max(14px,env(safe-area-inset-top));
+  right:max(14px,env(safe-area-inset-right));
+  width:52px;
+  height:52px;
+  border:0;
+  border-radius:50%;
+  background:#ffffff28;
+  color:#49647c88;
+  font-size:25px;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+#settingsButton:focus-visible {
+  outline:2px solid #526b80;
+}
+#settings {
+  position:absolute;
+  z-index:30;
+  top:max(70px,calc(env(safe-area-inset-top) + 65px));
+  right:max(12px,env(safe-area-inset-right));
+  width:min(320px,90vw);
+  padding:18px;
+  border-radius:19px;
+  background:#f8f6ed;
+  box-shadow:0 8px 30px #314d6538;
+  color:#40556a;
+  display:none;
+  direction:rtl;
+}
+#settings.open { display:block; }
+#settings h2 {
+  font-size:21px;
+  margin:0 50px 16px 0;
+}
+#close {
+  position:absolute;
+  top:7px;
+  left:7px;
+  width:48px;
+  height:48px;
+  border:0;
+  background:transparent;
+  color:#607488;
+  font-size:23px;
+  border-radius:50%;
+}
+.setting {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  min-height:49px;
+  border-bottom:1px solid #dce0df;
+  font-size:16px;
+}
+.setting label { flex:1; }
+.setting select {
+  max-width:155px;
+  font-size:15px;
+  padding:8px;
+  border:1px solid #c9d3d7;
+  border-radius:9px;
+  background:white;
+  color:#40556a;
+}
+.setting input[type=range] { width:105px; accent-color:#b99550; }
+.setting button {
+  border:1px solid #c6d1d6;
+  background:white;
+  border-radius:10px;
+  color:#40556a;
+  padding:8px 12px;
+  font-size:15px;
+}
+#mute.active { background:#e7d8b9; }
+#homeRow {
+  padding-top:15px;
+  border:0;
+  justify-content:center;
+}
+#homeHold {
+  position:relative;
+  overflow:hidden;
+  min-height:48px;
+  width:100%;
+  border:1px solid #d3c5a7;
+  border-radius:12px;
+  background:#eee7d8;
+  color:#665941;
+  font-size:15px;
+  touch-action:manipulation;
+}
+#holdProgress {
+  position:absolute;
+  inset:0 auto 0 0;
+  width:0%;
+  background:#d9c28b66;
+  pointer-events:none;
+}
+#homeText { position:relative; }
+.particle {
+  position:absolute;
+  pointer-events:none;
+  width:var(--size);
+  height:var(--size);
+  left:0;
+  top:0;
+  transform:translate(-50%,-50%);
+  animation:burst var(--duration) cubic-bezier(.2,.55,.4,1) forwards;
+  will-change:transform,opacity;
+}
+.particle svg {
+  width:100%;
+  height:100%;
+  overflow:visible;
+}
+@keyframes burst {
+  0% {
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.15) rotate(0deg);
+  }
+  12% { opacity:1; }
+  48% {
+    opacity:1;
+    transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1) rotate(var(--rotation));
+  }
+  75% {
+    opacity:.9;
+    transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy) + 24px)) scale(.96) rotate(var(--rotation));
+  }
+  100% {
+    opacity:0;
+    transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy) + 75px)) scale(.8) rotate(var(--rotation));
+  }
+}
+.spark {
+  position:absolute;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#f8e7b9;
+  opacity:0;
+  pointer-events:none;
+  animation:sparkle 3.3s ease-out forwards;
+}
+@keyframes sparkle {
+  0%,100% { opacity:0; transform:scale(.5); }
+  25% { opacity:.65; transform:scale(1); }
+  70% { opacity:.35; transform:scale(.8); }
+}
+#quietHint {
+  position:absolute;
+  bottom:7%;
+  left:50%;
+  transform:translateX(-50%);
+  color:#48698288;
+  font-size:clamp(15px,2.5vmin,21px);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 1s;
+}
+@media (prefers-reduced-motion:reduce) {
+  .particle { animation-duration:4s; }
+}
+@media (max-height:480px) {
+  #intro { gap:12px; }
+  h1 { font-size:clamp(30px,8vmin,50px); }
+  #start { min-height:58px;padding:10px 45px; }
+  #settings { padding:12px; }
+  .setting { min-height:39px; }
+}
+</style>
+</head>
+<body>
+<main id="stage" aria-label="זיקוקי חנוכה">
+  <div id="intro">
+    <h1>זיקוקי חנוכה</h1>
+    <button id="start">התחל</button>
+  </div>
+  <div id="quietHint">אפשר לגעת במסך ולראות פריחה ✨</div>
+  <button id="settingsButton" aria-label="הגדרות מבוגר" title="הגדרות">⚙</button>
+  <section id="settings" aria-label="הגדרות מבוגר">
+    <button id="close" aria-label="סגירה">×</button>
+    <h2>הגדרות מבוגר</h2>
+    <div class="setting">
+      <label for="speed">מהירות</label>
+      <select id="speed">
+        <option value="slow">איטי</option>
+        <option value="medium">בינוני</option>
+        <option value="fast">מהיר</option>
+      </select>
+    </div>
+    <div class="setting">
+      <label for="element">אלמנט</label>
+      <select id="element">
+        <option value="donut">סופגנייה</option>
+        <option value="menorah">חנוכייה</option>
+        <option value="coin">מטבע</option>
+        <option value="cycle">מתחלף</option>
+      </select>
+    </div>
+    <div class="setting">
+      <label for="volume">עוצמת קול</label>
+      <input id="volume" type="range" min="0" max="0.35" step="0.01" value="0.12">
+    </div>
+    <div class="setting">
+      <label>צליל</label>
+      <button id="mute" type="button">השתקה</button>
+    </div>
+    <div class="setting" id="homeRow">
+      <button id="homeHold">
+        <span id="holdProgress"></span>
+        <span id="homeText">לחיצה ארוכה: חזרה למסך הפתיחה</span>
+      </button>
+    </div>
+  </section>
+  <div id="art"></div>
+</main>
+<script>
+(() => {
+  'use strict';
+
+  const stage = document.getElementById('stage');
+  const art = document.getElementById('art');
+  const intro = document.getElementById('intro');
+  const start = document.getElementById('start');
+  const settingsButton = document.getElementById('settingsButton');
+  const settings = document.getElementById('settings');
+  const closeButton = document.getElementById('close');
+  const quietHint = document.getElementById('quietHint');
+
+  const speedSelect = document.getElementById('speed');
+  const elementSelect = document.getElementById('element');
+  const volumeInput = document.getElementById('volume');
+  const muteButton = document.getElementById('mute');
+  const homeHold = document.getElementById('homeHold');
+  const holdProgress = document.getElementById('holdProgress');
+
+  const TYPES = ['donut','menorah','coin'];
+  const SCALE = [261.63,293.66,329.63,392,440,523.25,587.33];
+
+  let playing = false;
+  let settingsOpen = false;
+  let muted = false;
+  let volume = 0.12;
+  let speed = 'slow';
+  let selectedElement = 'donut';
+  let cycleIndex = 0;
+  let audioContext = null;
+  let lastTouch = 0;
+  let lastInteraction = Date.now();
+  let activeBursts = 0;
+  let lastBurst = 0;
+  let idleTimer = null;
+  let holdTimer = null;
+  let holdStart = 0;
+  let holdFrame = null;
+
+  const durationBySpeed = {
+    slow: 3.8,
+    medium: 3.4,
+    fast: 3.0
+  };
+
+  function loadSettings() {
+    try {
+      const data = JSON.parse(localStorage.getItem('hanukkahFireworksSettings') || '{}');
+      if (['slow','medium','fast'].includes(data.speed)) speed = data.speed;
+      if (TYPES.concat('cycle').includes(data.element)) selectedElement = data.element;
+      if (typeof data.volume === 'number' && data.volume >= 0 && data.volume <= .35) volume = data.volume;
+      muted = data.muted === true;
+    } catch (_) {}
+    speedSelect.value = speed;
+    elementSelect.value = selectedElement;
+    volumeInput.value = volume;
+    updateMute();
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem('hanukkahFireworksSettings', JSON.stringify({
+        speed, element:selectedElement, volume, muted
+      }));
+    } catch (_) {
+      // המשחק ממשיך לפעול גם ללא localStorage
+    }
+  }
+
+  function updateMute() {
+    muteButton.textContent = muted ? 'מושתק' : 'פעיל';
+    muteButton.classList.toggle('active', muted);
+  }
+
+  function ensureAudio() {
+    if (!audioContext) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioContext = new AC();
+    }
+    if (audioContext && audioContext.state === 'suspended') {
+      audioContext.resume().catch(() => {});
+    }
+  }
+
+  function tone(freq, startTime, duration, type, gainAmount, ctx) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, startTime);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(type === 'triangle' ? 1800 : 2600, startTime);
+
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.linearRampToValueAtTime(gainAmount, startTime + 0.14);
+    gain.gain.setValueAtTime(gainAmount, startTime + Math.max(.15,duration*.55));
+    gain.gain.exponentialRampToValueAtTime(.0001, startTime + duration);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(startTime);
+    osc.stop(startTime + duration + .04);
+  }
+
+  function playSound(type) {
+    if (muted || volume <= 0 || !audioContext || activeBursts > 3) return;
+    if (audioContext.state !== 'running') return;
+
+    const ctx = audioContext;
+    const now = ctx.currentTime + .04;
+    const root = SCALE[Math.floor(Math.random() * 5) + 1];
+    const level = volume * .20;
+
+    if (type === 'donut') {
+      tone(root * .5, now, 2.35, 'triangle', level * .7, ctx);
+    } else if (type === 'menorah') {
+      [1,1.25,1.5].forEach((ratio,i) => {
+        tone(root * ratio, now + i*.34, 1.35, 'sine', level*.48, ctx);
+      });
+    } else {
+      tone(root * 2, now, .8, 'sine', level*.42, ctx);
+      tone(root * 2.5, now + .25, .8, 'sine', level*.38, ctx);
+    }
+  }
+
+  function donutSVG() {
+    return `
+    <svg viewBox="0 0 120 120" aria-hidden="true">
+      <defs>
+        <radialGradient id="dough" cx="35%" cy="30%">
+          <stop offset="0" stop-color="#f6d79b"/>
+          <stop offset=".65" stop-color="#dba45a"/>
+          <stop offset="1" stop-color="#aa713b"/>
+        </radialGradient>
+      </defs>
+      <circle cx="60" cy="62" r="51" fill="url(#dough)"/>
+      <circle cx="60" cy="62" r="16" fill="#a77b50"/>
+      <circle cx="60" cy="62" r="11" fill="#a8c5d7"/>
+      <path d="M29 49 Q34 24 59 24 Q81 19 94 41 Q89 51 78 49 Q66 43 58 51 Q45 60 29 49Z" fill="#c94e51"/>
+      <path d="M29 49 Q34 24 59 24 Q81 19 94 41" fill="none" stroke="#f18a7c" stroke-width="3" opacity=".5"/>
+      <g fill="#fff8e8" opacity=".92">
+        <circle cx="38" cy="35" r="3"/><circle cx="49" cy="29" r="2.5"/>
+        <circle cx="73" cy="31" r="3"/><circle cx="88" cy="53" r="2.5"/>
+        <circle cx="30" cy="72" r="2.8"/><circle cx="44" cy="87" r="2.5"/>
+        <circle cx="74" cy="92" r="3"/><circle cx="93" cy="75" r="2.5"/>
+        <circle cx="57" cy="104" r="2.5"/><circle cx="57" cy="19" r="2"/>
+      </g>
+    </svg>`;
+  }
+
+  function menorahSVG() {
+    let candles = '';
+    for (let i=0; i<9; i++) {
+      const x = 16 + i*11;
+      const y = 40;
+      candles += `
+        <rect x="${x-2.4}" y="${y}" width="4.8" height="43" rx="2.2" fill="#f4e5b6"/>
+        <path d="M${x} 8 Q${x-7} 19 ${x} 28 Q${x+7} 19 ${x} 8Z" fill="#f4b75e"/>
+        <path d="M${x} 13 Q${x-3} 19 ${x} 22 Q${x+3} 19 ${x} 13Z" fill="#fff1bd"/>
+        <path d="M${x-2} 44 H${x+2}" stroke="#d6b47c" stroke-width="1"/>`;
+    }
+    return `
+    <svg viewBox="0 0 120 120" aria-hidden="true">
+      <rect x="11" y="87" width="98" height="11" rx="5" fill="#d8a64c"/>
+      <path d="M60 85 V76 M16 76 H104" stroke="#bd883e" stroke-width="5" stroke-linecap="round"/>
+      <path d="M16 76 V73 M104 76 V73" stroke="#bd883e" stroke-width="5"/>
+      ${candles}
+      <rect x="53" y="73" width="14" height="8" rx="2" fill="#e0b65e"/>
+    </svg>`;
+  }
+
+  function coinSVG() {
+    return `
+    <svg viewBox="0 0 120 120" aria-hidden="true">
+      <defs>
+        <radialGradient id="coinGold" cx="35%" cy="30%">
+          <stop offset="0" stop-color="#fff0bc"/>
+          <stop offset=".7" stop-color="#e6bc66"/>
+          <stop offset="1" stop-color="#c28c3f"/>
+        </radialGradient>
+      </defs>
+      <circle cx="60" cy="60" r="51" fill="url(#coinGold)" stroke="#a77b42" stroke-width="3"/>
+      <circle cx="60" cy="60" r="43" fill="none" stroke="#f8e4ad" stroke-width="2"/>
+      <path d="M60 34 L66 50 L83 50 L69 61 L74 78 L60 68 L46 78 L51 61 L37 50 L54 50Z" fill="#fff1c8" stroke="#c6974e" stroke-width="1.5"/>
+    </svg>`;
+  }
+
+  function elementSVG(type) {
+    if (type === 'donut') return donutSVG();
+    if (type === 'menorah') return menorahSVG();
+    return coinSVG();
+  }
+
+  function chooseType() {
+    if (selectedElement !== 'cycle') return selectedElement;
+    const type = TYPES[cycleIndex % TYPES.length];
+    cycleIndex++;
+    return type;
+  }
+
+  function countForDevice() {
+    const small = Math.min(innerWidth,innerHeight) < 600;
+    if (small) return 4 + Math.floor(Math.random()*2);
+    return 6 + Math.floor(Math.random()*3);
+  }
+
+  function createSpark(x,y) {
+    const spark = document.createElement('div');
+    spark.className = 'spark';
+    spark.style.left = x + 'px';
+    spark.style.top = y + 'px';
+    art.appendChild(spark);
+    setTimeout(() => spark.remove(),3500);
+  }
+
+  function burst(x,y,quiet=false) {
+    if (!playing || settingsOpen || activeBursts >= 3) return;
+
+    const now = Date.now();
+    const rapid = now - lastBurst < 500;
+    lastBurst = now;
+    lastInteraction = now;
+
+    const type = chooseType();
+    const count = quiet ? 3 : countForDevice();
+    const duration = durationBySpeed[speed] * (rapid ? 1.1 : 1);
+    const spread = rapid ? .65 : 1;
+
+    activeBursts++;
+    if (!quiet) playSound(type);
+
+    const size = Math.max(90,Math.min(innerWidth,innerHeight)*.16);
+    const reduced = count;
+
+    for (let i=0;i<reduced;i++) {
+      const angle = (Math.PI*2*i/reduced) + (Math.random()-.5)*.23;
+      const radius = (Math.min(innerWidth,innerHeight)*(.22 + Math.random()*.13))*spread;
+      const dx = Math.cos(angle)*radius;
+      const dy = Math.sin(angle)*radius;
+      const particle = document.createElement('div');
+      const actualSize = quiet ? size*.72 : size*(rapid?.72:(.9+Math.random()*.14));
+
+      particle.className = 'particle';
+      particle.style.left = x+'px';
+      particle.style.top = y+'px';
+      particle.style.setProperty('--size',actualSize+'px');
+      particle.style.setProperty('--dx',dx+'px');
+      particle.style.setProperty('--dy',dy+'px');
+      particle.style.setProperty('--duration',duration+'s');
+      particle.style.setProperty('--rotation',((Math.random()-.5)*22)+'deg');
+      particle.innerHTML = elementSVG(type);
+      art.appendChild(particle);
+      setTimeout(() => particle.remove(),duration*1000+100);
+    }
+
+    if (!quiet) {
+      for (let i=0;i<5;i++) {
+        const angle = Math.random()*Math.PI*2;
+        const distance = 30+Math.random()*70;
+        createSpark(
+          x+Math.cos(angle)*distance,
+          y+Math.sin(angle)*distance
+        );
+      }
+    }
+
+    setTimeout(() => {
+      activeBursts = Math.max(0,activeBursts-1);
+    },duration*1000+100);
+  }
+
+  function startGame() {
+    if (playing) return;
+    playing = true;
+    ensureAudio();
+    intro.style.opacity = '0';
+    setTimeout(() => {
+      intro.style.display = 'none';
+    },650);
+    lastInteraction = Date.now();
+    resetIdleTimer();
+  }
+
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    quietHint.style.opacity = '0';
+    idleTimer = setTimeout(() => {
+      if (playing && !settingsOpen && activeBursts === 0) {
+        quietHint.style.opacity = '1';
+        burst(innerWidth/2,innerHeight*.48,true);
+      }
+    },10000);
+  }
+
+  function openSettings() {
+    settingsOpen = true;
+    settings.classList.add('open');
+    clearTimeout(idleTimer);
+    quietHint.style.opacity = '0';
+    // פריחות שכבר החלו יסתיימו באופן טבעי.
+  }
+
+  function closeSettings() {
+    settingsOpen = false;
+    settings.classList.remove('open');
+    if (playing) resetIdleTimer();
+  }
+
+  settingsButton.addEventListener('pointerdown',e => {
+    e.stopPropagation();
+    e.preventDefault();
+    settingsOpen ? closeSettings() : openSettings();
+  });
+
+  settings.addEventListener('pointerdown',e => e.stopPropagation());
+  closeButton.addEventListener('pointerdown',e => {
+    e.preventDefault();
+    closeSettings();
+  });
+
+  document.addEventListener('pointerdown',e => {
+    if (settingsOpen && !settings.contains(e.target) && e.target !== settingsButton) {
+      closeSettings();
+    }
+  });
+
+  document.addEventListener('keydown',e => {
+    if (e.key === 'Escape' && settingsOpen) closeSettings();
+
+    if ((e.key === ' ' || e.key === 'Enter') &&
+        !settingsOpen &&
+        !['BUTTON','SELECT','INPUT'].includes(document.activeElement.tagName)) {
+      e.preventDefault();
+      if (!playing) startGame();
+      else burst(innerWidth/2,innerHeight/2);
+    }
+  });
+
+  start.addEventListener('pointerdown',e => {
+    e.preventDefault();
+    e.stopPropagation();
+    startGame();
+  });
+
+  stage.addEventListener('pointerdown',e => {
+    if (!playing || settingsOpen || e.target.closest('#settings') ||
+        e.target.closest('#settingsButton') || e.target.closest('#intro')) return;
+
+    e.preventDefault();
+    const x = e.clientX;
+    const y = e.clientY;
+    burst(x,y);
+    resetIdleTimer();
+  });
+
+  speedSelect.addEventListener('change',() => {
+    speed = speedSelect.value;
+    saveSettings();
+  });
+
+  elementSelect.addEventListener('change',() => {
+    selectedElement = elementSelect.value;
+    cycleIndex = 0;
+    saveSettings();
+  });
+
+  volumeInput.addEventListener('input',() => {
+    volume = Number(volumeInput.value);
+    saveSettings();
+  });
+
+  muteButton.addEventListener('click',() => {
+    muted = !muted;
+    updateMute();
+    saveSettings();
+  });
+
+  function updateHoldProgress() {
+    if (!holdStart) return;
+    const elapsed = Date.now()-holdStart;
+    const progress = Math.min(100,elapsed/2000*100);
+    holdProgress.style.width = progress+'%';
+
+    if (elapsed >= 2000) {
+      holdStart = 0;
+      cancelAnimationFrame(holdFrame);
+      holdProgress.style.width = '0%';
+      closeSettings();
+      playing = false;
+      intro.style.display = 'flex';
+      requestAnimationFrame(() => intro.style.opacity = '1');
+      art.innerHTML = '';
+      activeBursts = 0;
+      clearTimeout(idleTimer);
+      return;
+    }
+    holdFrame = requestAnimationFrame(updateHoldProgress);
+  }
+
+  function beginHold(e) {
+    e.preventDefault();
+    holdStart = Date.now();
+    holdProgress.style.width = '0%';
+    cancelAnimationFrame(holdFrame);
+    holdFrame = requestAnimationFrame(updateHoldProgress);
+  }
+
+  function cancelHold() {
+    holdStart = 0;
+    cancelAnimationFrame(holdFrame);
+    holdProgress.style.width = '0%';
+  }
+
+  homeHold.addEventListener('pointerdown',beginHold);
+  homeHold.addEventListener('pointerup',cancelHold);
+  homeHold.addEventListener('pointercancel',cancelHold);
+  homeHold.addEventListener('lostpointercapture',cancelHold);
+  homeHold.addEventListener('contextmenu',e => e.preventDefault());
+
+  // iOS: ביטול מחוות זום במגע בלבד.
+  const isTouchDevice = navigator.maxTouchPoints > 0;
+  if (isTouchDevice) {
+    ['gesturestart','gesturechange','gestureend'].forEach(name => {
+      document.addEventListener(name,e => e.preventDefault(),{passive:false});
+    });
+    document.addEventListener('touchmove',e => {
+      if (e.touches.length > 1) e.preventDefault();
+    },{passive:false});
+  }
+
+  window.addEventListener('resize',() => {
+    // כל המידות מחושבות מחדש לפי גודל המסך בכל פריחה.
+  });
+
+  loadSettings();
+})();
+</script>
+</body>
+</html>
